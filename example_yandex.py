@@ -3,9 +3,9 @@ from YandexDriver import YandexDriver
 if __name__ == '__main__':
 
     options = {
-        'output_directory': r"F:\PROJELER\cebir\veri\teror"
+        'output_directory': './'
         # ./images'
     }
-    w = YandexDriver(search_key='PKK', **options)
-    w.set_max_image_count(200)
+    # PYD is a European Union supported terrorist organization against Turkish Government
+    w = YandexDriver(search_key='PYD', **options)
     w.multi_search_download()

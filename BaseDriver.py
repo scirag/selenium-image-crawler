@@ -13,7 +13,7 @@ class BaseImageDriver(ABC):
 
         if type(search_key) == str:
             if search_key == '':
-                search_key = 'kabe'
+                search_key = 'Kabe'
             self.g_search_key_list = [search_key]
         elif type(search_key) == list:
             self.g_search_key_list = search_key
