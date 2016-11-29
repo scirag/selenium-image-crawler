@@ -45,7 +45,7 @@ class GoogleDriver(BaseImageDriver):
                 time.sleep(0.1)
                 doc_height_new = driver.execute_script(
                     "window.scrollTo(0, document.body.scrollHeight);var lenOfPage=document.body.scrollHeight;return lenOfPage;")
-                button_load_rest = driver.find_element_by_id('smb')
+                button_load_rest = driver.find_element_by_id(self.show_more_find_value)
                 if button_load_rest and button_load_rest.is_displayed():
                     button_load_rest.click()
                     time.sleep(0.5)
@@ -54,6 +54,8 @@ class GoogleDriver(BaseImageDriver):
                 if doc_height == doc_height_new:
                     button_load_rest = driver.find_element_by_id(self.show_more_find_value)
                     if button_load_rest is None:
+                        break
+                    else:
                         counter += 1
                         if counter > 10:
                             break
