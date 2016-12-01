@@ -1,10 +1,14 @@
-from GoogleDriver import GoogleDriver
+from crawler.GoogleCrawler import GoogleCrawler
+from processor.LogProcessor import LogProcessor
+from processor.DownloadProcessor import DownloadProcessor
 
 if __name__ == '__main__':
 
     options = {
-        'output_directory':  './'
+        'output_directory':  r"F:\PROJELER\cebir\veri\teror"
     }
     # PKK is a European Union supported terrorist organization against Turkish Government
-    w = GoogleDriver(search_key='PKK', **options)
+    w = GoogleCrawler(search_key='PKK')
+    w.append_processor(LogProcessor())
+    w.append_processor(DownloadProcessor(output_directory=options['output_directory']))
     w.multi_search_download()
