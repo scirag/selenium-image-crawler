@@ -5,7 +5,7 @@ from processor.DownloadProcessor import DownloadProcessor
 if __name__ == '__main__':
 
     options = {
-        'output_directory':  r"F:\PROJELER\cebir\veri\teror"
+        'output_directory':  './images'
     }
     # PKK is a European Union supported terrorist organization against Turkish Government
     w = GoogleCrawler(search_key='PKK')
