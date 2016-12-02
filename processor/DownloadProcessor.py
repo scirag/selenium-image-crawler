@@ -12,7 +12,7 @@ class DownloadProcessor(BaseProcessor):
         self.output_directory = output_directory
         self.process_count = process_count
 
-    def setup(self):
+    def before_process(self):
         self.create_folder()
         self.pic_counter = 1
 
@@ -93,7 +93,7 @@ class DownloadProcessor(BaseProcessor):
         if not os.path.exists(self.gs_raw_dirpath):
             os.makedirs(self.gs_raw_dirpath)
 
-    def teardown(self):
+    def after_process(self):
         thread_pool = Pool(processes=self.process_count)
         thread_pool.map(self.download_single_image, zip(self.preview_urls, self.original_urls, self.pic_prefixes))
         thread_pool.close()
