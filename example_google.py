@@ -13,4 +13,4 @@ if __name__ == '__main__':
     w.append_processor(LogProcessor())
     # w.append_processor(DownloadProcessor(output_directory=options['output_directory']))
     w.append_processor(ElasticSearchProcessor())
-    w.multi_search_download()
+    w.run()
