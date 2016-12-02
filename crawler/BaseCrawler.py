@@ -96,7 +96,7 @@ class BaseCrawler(ABC):
     def process_all_images(self):
 
         for processor in self.processor_list:
-            processor.setup()
+            processor.before_process()
 
         search_term = self.g_search_key.rstrip()
         for preview_url, original_url in self.pic_url_list:
@@ -104,7 +104,7 @@ class BaseCrawler(ABC):
                 processor.process(preview_url, original_url, search_term)
 
         for processor in self.processor_list:
-            processor.teardown()
+            processor.after_process()
 
     def save_infolist_to_file(self):
         """ Save the info list to file.
