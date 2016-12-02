@@ -100,7 +100,8 @@ class BaseCrawler(ABC):
 
         search_term = self.g_search_key.rstrip()
         for preview_url, original_url in self.pic_url_list:
-            processor.process(preview_url, original_url, search_term)
+            for processor in self.processor_list:
+                processor.process(preview_url, original_url, search_term)
 
         for processor in self.processor_list:
             processor.teardown()
