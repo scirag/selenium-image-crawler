@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 class BaseProcessor(ABC):
 
     @abstractmethod
-    def setup(self):
+    def before_process(self):
         pass
 
     @abstractmethod
@@ -12,5 +12,5 @@ class BaseProcessor(ABC):
         pass
 
     @abstractmethod
-    def teardown(self):
+    def after_process(self):
         pass
