@@ -11,4 +11,4 @@ if __name__ == '__main__':
     w = YandexCrawler(search_key='PYD')
     w.append_processor(LogProcessor())
     # w.append_processor(DownloadProcessor(output_directory=options['output_directory'], process_count=16))
-    w.multi_search_download()
+    w.run()
