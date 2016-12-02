@@ -81,8 +81,8 @@ class BaseCrawler(ABC):
     def extract_pic_url(self, driver):
         driver.quit()
 
-    def multi_search_download(self):
-        """ Mutli search download"""
+    def run(self):
+        
         for search in self.g_search_key_list:
             self.pic_url_list = []
             self.pic_info_list = []
