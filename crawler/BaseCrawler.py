@@ -99,6 +99,10 @@ class BaseCrawler(ABC):
             processor.before_process()
 
         search_term = self.g_search_key.rstrip()
+
+        if self.max_image_count < len(self.pic_url_list):
+            self.pic_url_list = self.pic_url_list[:self.max_image_count]
+
         for preview_url, original_url in self.pic_url_list:
             for processor in self.processor_list:
                 processor.process(preview_url, original_url, search_term)

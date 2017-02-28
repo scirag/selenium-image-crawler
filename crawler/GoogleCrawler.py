@@ -30,6 +30,8 @@ class GoogleCrawler(BaseCrawler):
             original_image_url = tag.get_attribute('href')
             preview_image_url = tag.find_element_by_class_name(self.preview_image_class).get_attribute('src')
             self.pic_url_list.append((preview_image_url, original_image_url))
+            if self.max_image_count == len(self.pic_url_list):
+                break
         driver.quit()
 
     def load_page(self, driver):
