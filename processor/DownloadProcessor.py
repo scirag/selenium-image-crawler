@@ -37,40 +37,22 @@ class DownloadProcessor(BaseProcessor):
         """
         preview_url, original_url, pic_prefix_str = params
         self.download_fault = 0
-        file_ext = os.path.splitext(preview_url)[1]  # use for checking valid pic ext
-        if len(file_ext) == 0:
-            file_ext = ".png"
-        temp_filename = pic_prefix_str + file_ext
-        temp_filename_full_path = os.path.join(self.gs_raw_dirpath, temp_filename)
 
-        valid_image_ext_list = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff']  # not comprehensive
-
-        #url = URL(url_link)
-        #if url.redirect:
-        #    return  # if there is re-direct, return
-
-        if file_ext not in valid_image_ext_list:
-            return  # return if not valid image extension
-        # info_list = self.pic_info_list
-        # info_list.append(pic_prefix_str + ': ' + url_link)
-
-        info_txt_path = os.path.join(self.gs_raw_dirpath, self.search_term + '_info.txt')
-
-        try:
-            timeout = 1
-            if preview_url.startswith("http://") or preview_url.startswith("https://"):
-                raise
-            with open(temp_filename_full_path, "wb") as fh:
-                preview_url = preview_url[preview_url.find(",") + 1:]
-                fh.write(base64.standard_b64decode(preview_url))
-                with open(info_txt_path, 'a') as f:
-                    f.write(pic_prefix_str + ': ' + original_url)
-                    f.write('\n')
-
-        except:
-            # if self.__print_download_fault:
+        timeout = 1
+        if preview_url.startswith("http://") or preview_url.startswith("https://"):
             try:
                 response = urllib.request.urlopen(preview_url, data=None, timeout=timeout)
+                if response.headers['Content-Type'] == "image/jpeg":
+                    file_ext = ".jpg"
+                elif response.headers['Content-Type'] == "image/png":
+                    file_ext = ".png"
+                elif response.headers['Content-Type'] == "image/gif":
+                    file_ext = ".gif"
+                else:
+                    raise "image format not found"
+                temp_filename = pic_prefix_str + file_ext
+                temp_filename_full_path = os.path.join(self.gs_raw_dirpath, temp_filename)
+                info_txt_path = os.path.join(self.gs_raw_dirpath, self.search_term + '_info.txt')
                 data = response.read()  # a `bytes` object
                 if len(data) > 0:
                     f = open(temp_filename_full_path, 'wb')  # save as test.gif
@@ -83,6 +65,25 @@ class DownloadProcessor(BaseProcessor):
             except:
                 print('Problem with processing this data: ', original_url)
                 self.download_fault = 1
+            pass
+        elif preview_url.startswith("data:"):
+            if preview_url.startswith("data:image/jpeg"):
+                file_ext = ".jpg"
+            elif preview_url.startswith("data:image/png"):
+                file_ext = ".png"
+            elif preview_url.startswith("data:image/gif"):
+                file_ext = ".gif"
+            else:
+                raise "image format not found"
+            temp_filename = pic_prefix_str + file_ext
+            temp_filename_full_path = os.path.join(self.gs_raw_dirpath, temp_filename)
+            info_txt_path = os.path.join(self.gs_raw_dirpath, self.search_term + '_info.txt')
+            with open(temp_filename_full_path, "wb") as fh:
+                preview_url = preview_url[preview_url.find(",") + 1:]
+                fh.write(base64.standard_b64decode(preview_url))
+                with open(info_txt_path, 'a') as f:
+                    f.write(pic_prefix_str + ': ' + original_url)
+                    f.write('\n')
 
     def create_folder(self):
         """
