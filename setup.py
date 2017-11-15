@@ -1,4 +1,9 @@
+# -*- coding: utf-8 -*-
 from setuptools import setup
+
+import sys
+if sys.version_info < (3,3):
+    sys.exit('Sorry, Python < 3.3 is not supported')
 
 setup(name='imagecrawler',
       version='0.1',
@@ -9,7 +14,6 @@ setup(name='imagecrawler',
       license='MIT',
       packages=['crawler', 'processor'],
       install_requires=[
-          'python>=3.3',
           'elasticsearch',
           'Pillow>=2.0',
           'requests',
