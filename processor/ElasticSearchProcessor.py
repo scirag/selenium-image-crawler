@@ -86,7 +86,7 @@ class ElasticSearchProcessor(BaseProcessor):
         self.search_terms = []
         self.index_names = []
 
-    def before_process(self):
+    def before_process(self, search_term):
         create_index(self.index_name)
         self.preview_image_urls = []
         self.original_image_urls = []
@@ -100,7 +100,7 @@ class ElasticSearchProcessor(BaseProcessor):
             self.search_terms.append(search_term)
             self.index_names.append(self.index_name)
 
-    def after_process(self):
+    def after_process(self, search_term):
         thread_pool = Pool(processes=self.process_count)
         thread_pool.map(index_image_es, zip(self.preview_image_urls,
                                             self.original_image_urls,

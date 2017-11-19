@@ -4,12 +4,12 @@ from crawler.BaseCrawler import BaseCrawler
 
 class YandexCrawler(BaseCrawler):
 
-    def __init__(self, search_key='', **kwargs):
-        super().__init__(search_key, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
         # google search specific url parameters
         self.search_url_prefix = kwargs.get('search_url_prefix', 'https://yandex.com.tr/gorsel/search?text=')
-        self.search_url_postfix = kwargs.get('search_url_postfix', '')
+        self.search_url_suffix = kwargs.get('search_url_suffix', '')
 
         # show more options
         # options : 'id','class'
@@ -19,6 +19,12 @@ class YandexCrawler(BaseCrawler):
         # image options
         self.preview_image_class = kwargs.get('preview_image_class', 'serp-item__thumb')
         self.original_image_class = kwargs.get('original_image_class', 'serp-item__link')
+
+    def get_search_url_prefix(self):
+        return self.search_url_prefix
+
+    def get_search_url_suffix(self):
+        return self.search_url_suffix
 
     def extract_pic_url(self, driver):
         """ extract all the raw pic url in list
@@ -32,8 +38,8 @@ class YandexCrawler(BaseCrawler):
             self.pic_url_list.append((preview_image_url, original_image_url))
         driver.quit()
 
-    def load_page(self, driver):
-        driver.get(self.target_url_str)
+    def load_page(self, driver, target_url):
+        driver.get(target_url)
         try:
             doc_height = driver.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight);var lenOfPage=document.body.scrollHeight;return lenOfPage;")

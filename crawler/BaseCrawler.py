@@ -5,45 +5,19 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 class BaseCrawler(ABC):
-    def __init__(self, search_key='', **kwargs):
-
-        if type(search_key) == str:
-            if search_key == '':
-                search_key = 'Kabe'
-            self.g_search_key_list = [search_key]
-        elif type(search_key) == list:
-            self.g_search_key_list = search_key
-        else:
-            print('search_keyword not of type str or list')
-            raise
-
-        self.g_search_key = ''
-        self.target_url_str = ''
+    def __init__(self, **kwargs):
 
         ## storage
         self.pic_url_list = []
         self.pic_info_list = []
 
-        self.process_count = kwargs.get('process_count', os.cpu_count())
         self.max_image_count = kwargs.get('max_image_count', 622)
-
-        # google search specific url parameters
-        self.search_url_prefix = None
-        self.search_url_postfix = None
 
         self.processor_list = []
 
-    def reformat_search_for_spaces(self):
-        """
-            Method call immediately at the initialization stages
-            get rid of the spaces and replace by the "+"
-            Use in search term. Eg: "Cookie fast" to "Cookie+fast"
-
-            steps:
-            strip any lagging spaces if present
-            replace the self.g_search_key
-        """
-        self.g_search_key = self.g_search_key.rstrip().replace(' ', '+')
+    @staticmethod
+    def reformat_search_for_spaces(search_term):
+        return search_term.strip().replace(' ', '+')
 
     def set_max_image_count(self, num_image):
         """ Set the number of image to download. Set to self.image_dl_per_search.
@@ -55,13 +29,10 @@ class BaseCrawler(ABC):
     def append_processor(self, processor):
         self.processor_list.append(processor)
 
-    def formed_search_url(self):
-        ''' Form the url either one selected key phrases or multiple search items.
-            Get the url from the self.g_search_key_list
-            Set to self.sp_search_url_list
+    def formed_search_url(self, search):
+        ''' Form the url either one selected key phrases or multiple search items and return result.
         '''
-        self.reformat_search_for_spaces()
-        self.target_url_str = self.search_url_prefix + self.g_search_key + self.search_url_postfix
+        return self.get_search_url_prefix() + BaseCrawler.reformat_search_for_spaces(search) + self.get_search_url_suffix()
 
     def create_selenium_driver(self):
         # driver = webdriver.Chrome()
@@ -74,31 +45,42 @@ class BaseCrawler(ABC):
         return driver
 
     @abstractmethod
-    def load_page(self, driver):
+    def get_search_url_prefix(self):
+        pass
+
+    @abstractmethod
+    def get_search_url_suffix(self):
+        pass
+
+    @abstractmethod
+    def load_page(self, driver, target_url):
         pass
 
     @abstractmethod
     def extract_pic_url(self, driver):
         driver.quit()
 
-    def run(self):
-        
-        for search in self.g_search_key_list:
+    def run(self, search_key_list):
+        if type(search_key_list) == str:
+            search_key_list = [search_key_list]
+
+        if type(search_key_list) != list:
+            print('search_keyword not of type str or list')
+            raise
+
+        for search in search_key_list:
             self.pic_url_list = []
             self.pic_info_list = []
-            self.g_search_key = search
-            self.formed_search_url()
+            target_url = self.formed_search_url(search)
             driver = self.create_selenium_driver()
-            self.load_page(driver)
+            self.load_page(driver, target_url)
             self.extract_pic_url(driver)
-            self.process_all_images()
+            self.process_all_images(search)
 
-    def process_all_images(self):
+    def process_all_images(self, search_term):
 
         for processor in self.processor_list:
-            processor.before_process()
-
-        search_term = self.g_search_key.rstrip()
+            processor.before_process(search_term)
 
         if self.max_image_count < len(self.pic_url_list):
             self.pic_url_list = self.pic_url_list[:self.max_image_count]
@@ -108,16 +90,4 @@ class BaseCrawler(ABC):
                 processor.process(preview_url, original_url, search_term)
 
         for processor in self.processor_list:
-            processor.after_process()
-
-    def save_infolist_to_file(self):
-        """ Save the info list to file.
-
-        """
-        temp_filename_full_path = os.path.join(self.gs_raw_dirpath, self.g_search_key + '_info.txt')
-
-        with open(temp_filename_full_path, 'w') as f:
-            for n in self.pic_info_list:
-                f.write(n)
-                f.write('\n')
-
+            processor.after_process(search_term)
