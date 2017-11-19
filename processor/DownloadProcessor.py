@@ -1,6 +1,7 @@
 from .BaseProcessor import BaseProcessor
 from multiprocessing import Pool
 import os
+import hashlib
 import urllib.request
 import time
 import base64
@@ -12,22 +13,24 @@ class DownloadProcessor(BaseProcessor):
         self.output_directory = output_directory
         self.process_count = process_count
 
-    def before_process(self):
-        self.create_folder()
-        self.pic_counter = 1
+    def before_process(self, search_term):
+
+        #
+        # Create folder for downloads based on search term.
+        #
+        self.gs_raw_dirpath = os.path.join(self.output_directory, search_term.strip().replace(' ', '_'))
+        if not os.path.exists(self.gs_raw_dirpath):
+            os.makedirs(self.gs_raw_dirpath)
 
         self.preview_urls = []
         self.original_urls = []
-        self.pic_prefixes = []
+        self.search_terms = []
 
     def process(self, preview_image_url, original_image_url, search_term):
-        self.search_term = search_term
-        pic_prefix_str = search_term + str(self.pic_counter)
         if preview_image_url:
             self.preview_urls.append(preview_image_url)
             self.original_urls.append(original_image_url)
-            self.pic_prefixes.append(pic_prefix_str)
-            self.pic_counter += 1
+            self.search_terms.append(search_term.strip().replace(' ', '_'))
 
     def download_single_image(self, params):
         """ Download data according to the url link given.
@@ -35,7 +38,7 @@ class DownloadProcessor(BaseProcessor):
                 url_link (str): url str.
                 pic_prefix_str (str): pic_prefix_str for unique label the pic
         """
-        preview_url, original_url, pic_prefix_str = params
+        preview_url, original_url, search_term = params
         self.download_fault = 0
 
         timeout = 1
@@ -50,11 +53,15 @@ class DownloadProcessor(BaseProcessor):
                     file_ext = ".gif"
                 else:
                     raise "image format not found"
+                data = response.read()  # a `bytes` object
+                md5_key = hashlib.md5(data).hexdigest()
+                pic_prefix_str = '%s.%s' % (search_term, md5_key)
                 temp_filename = pic_prefix_str + file_ext
                 temp_filename_full_path = os.path.join(self.gs_raw_dirpath, temp_filename)
-                info_txt_path = os.path.join(self.gs_raw_dirpath, self.search_term + '_info.txt')
-                data = response.read()  # a `bytes` object
-                if len(data) > 0:
+                # If file exists, could be rare MD5 collision or, more likely,
+                # is the same exact image downloaded from a different location
+                if len(data) > 0 and not os.path.exists(temp_filename_full_path):
+                    info_txt_path = os.path.join(self.gs_raw_dirpath, search_term + '_info.txt')
                     f = open(temp_filename_full_path, 'wb')  # save as test.gif
                     # print(url_link)
                     f.write(data)  # if have problem skip
@@ -75,27 +82,23 @@ class DownloadProcessor(BaseProcessor):
                 file_ext = ".gif"
             else:
                 raise "image format not found"
+            data = base64.standard_b64decode(preview_url)
+            md5_key = hashlib.md5(data).hexdigest()
+            pic_prefix_str = '%s.%s' % (search_term, md5_key)
             temp_filename = pic_prefix_str + file_ext
             temp_filename_full_path = os.path.join(self.gs_raw_dirpath, temp_filename)
-            info_txt_path = os.path.join(self.gs_raw_dirpath, self.search_term + '_info.txt')
-            with open(temp_filename_full_path, "wb") as fh:
-                preview_url = preview_url[preview_url.find(",") + 1:]
-                fh.write(base64.standard_b64decode(preview_url))
-                with open(info_txt_path, 'a') as f:
-                    f.write(pic_prefix_str + ': ' + original_url)
-                    f.write('\n')
+            info_txt_path = os.path.join(self.gs_raw_dirpath, search_term + '_info.txt')
+            if len(data) > 0 and not os.path.exists(temp_filename_full_path):
+                info_txt_path = os.path.join(self.gs_raw_dirpath, search_term + '_info.txt')
+                with open(temp_filename_full_path, "wb") as fh:
+                    preview_url = preview_url[preview_url.find(",") + 1:]
+                    fh.write(base64.standard_b64decode(preview_url))
+                    with open(info_txt_path, 'a') as f:
+                        f.write(pic_prefix_str + ': ' + original_url)
+                        f.write('\n')
 
-    def create_folder(self):
-        """
-            Create a folder to put the log data segregate by date
-
-        """
-        self.gs_raw_dirpath = os.path.join(self.output_directory, time.strftime("_%d_%b%y", time.localtime()))
-        if not os.path.exists(self.gs_raw_dirpath):
-            os.makedirs(self.gs_raw_dirpath)
-
-    def after_process(self):
+    def after_process(self, search_term):
         thread_pool = Pool(processes=self.process_count)
-        thread_pool.map(self.download_single_image, zip(self.preview_urls, self.original_urls, self.pic_prefixes))
+        thread_pool.map(self.download_single_image, zip(self.preview_urls, self.original_urls, self.search_terms))
         thread_pool.close()
         thread_pool.join()
