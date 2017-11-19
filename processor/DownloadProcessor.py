@@ -54,21 +54,22 @@ class DownloadProcessor(BaseProcessor):
                 else:
                     raise "image format not found"
                 data = response.read()  # a `bytes` object
-                md5_key = hashlib.md5(data).hexdigest()
-                pic_prefix_str = '%s.%s' % (search_term, md5_key)
-                temp_filename = pic_prefix_str + file_ext
-                temp_filename_full_path = os.path.join(self.gs_raw_dirpath, temp_filename)
-                # If file exists, could be rare MD5 collision or, more likely,
-                # is the same exact image downloaded from a different location
-                if len(data) > 0 and not os.path.exists(temp_filename_full_path):
-                    info_txt_path = os.path.join(self.gs_raw_dirpath, search_term + '_info.txt')
-                    f = open(temp_filename_full_path, 'wb')  # save as test.gif
-                    # print(url_link)
-                    f.write(data)  # if have problem skip
-                    f.close()
-                    with open(info_txt_path, 'a') as f:
-                        f.write(pic_prefix_str + ': ' + original_url)
-                        f.write('\n')
+                if len(data) > 0:
+                    md5_key = hashlib.md5(data).hexdigest()
+                    pic_prefix_str = '%s.%s' % (search_term, md5_key)
+                    temp_filename = pic_prefix_str + file_ext
+                    temp_filename_full_path = os.path.join(self.gs_raw_dirpath, temp_filename)
+                    # If file exists, could be rare MD5 collision or, more likely,
+                    # is the same exact image downloaded from a different location
+                    if not os.path.exists(temp_filename_full_path):
+                        info_txt_path = os.path.join(self.gs_raw_dirpath, search_term + '_info.txt')
+                        f = open(temp_filename_full_path, 'wb')  # save as test.gif
+                        # print(url_link)
+                        f.write(data)  # if have problem skip
+                        f.close()
+                        with open(info_txt_path, 'a') as f:
+                            f.write(pic_prefix_str + ': ' + original_url)
+                            f.write('\n')
             except:
                 print('Problem with processing this data: ', original_url)
                 self.download_fault = 1
@@ -83,19 +84,19 @@ class DownloadProcessor(BaseProcessor):
             else:
                 raise "image format not found"
             data = base64.standard_b64decode(preview_url)
-            md5_key = hashlib.md5(data).hexdigest()
-            pic_prefix_str = '%s.%s' % (search_term, md5_key)
-            temp_filename = pic_prefix_str + file_ext
-            temp_filename_full_path = os.path.join(self.gs_raw_dirpath, temp_filename)
-            info_txt_path = os.path.join(self.gs_raw_dirpath, search_term + '_info.txt')
-            if len(data) > 0 and not os.path.exists(temp_filename_full_path):
-                info_txt_path = os.path.join(self.gs_raw_dirpath, search_term + '_info.txt')
-                with open(temp_filename_full_path, "wb") as fh:
-                    preview_url = preview_url[preview_url.find(",") + 1:]
-                    fh.write(base64.standard_b64decode(preview_url))
-                    with open(info_txt_path, 'a') as f:
-                        f.write(pic_prefix_str + ': ' + original_url)
-                        f.write('\n')
+            if len(data) > 0:
+                md5_key = hashlib.md5(data).hexdigest()
+                pic_prefix_str = '%s.%s' % (search_term, md5_key)
+                temp_filename = pic_prefix_str + file_ext
+                temp_filename_full_path = os.path.join(self.gs_raw_dirpath, temp_filename)
+                if not os.path.exists(temp_filename_full_path):
+                    info_txt_path = os.path.join(self.gs_raw_dirpath, search_term + '_info.txt')
+                    with open(temp_filename_full_path, "wb") as fh:
+                        preview_url = preview_url[preview_url.find(",") + 1:]
+                        fh.write(base64.standard_b64decode(preview_url))
+                        with open(info_txt_path, 'a') as f:
+                            f.write(pic_prefix_str + ': ' + original_url)
+                            f.write('\n')
 
     def after_process(self, search_term):
         thread_pool = Pool(processes=self.process_count)
